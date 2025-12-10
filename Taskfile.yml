@@ -13,7 +13,7 @@ tasks:
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
         echo "Last tag: $LAST_TAG"
         NEW_TAG=$(semver -i patch "$LAST_TAG")
-        echo "New tag: $NEW_TAG"
+        echo "New tag: v$NEW_TAG"
         git tag "v$NEW_TAG"
         git push origin "v$NEW_TAG"
 
