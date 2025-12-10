@@ -1,31 +1,26 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
 version: 2
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
     - go generate ./...
 
 builds:
-  - env:
+  - id: proxy
+    main: ./cmd/proxy/main.go        # <-- your entrypoint
+    binary: proxy                    # output name
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
 
 archives:
-  - formats: [tar.gz]
-    # this name template makes the OS and Arch compatible with the results of `uname`.
+  - id: archive
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -33,10 +28,43 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
         formats: [zip]
+    builds:
+      - proxy
+
+dockers:
+  - id: proxy_linux_amd64
+    image_templates:
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:{{ .Tag }}"
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:latest"
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    use: buildx
+
+  - id: proxy_linux_arm64
+    image_templates:
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:{{ .Tag }}-arm64"
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:latest-arm64"
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile
+    use: buildx
+
+# Optional: build multi-arch manifest
+docker_manifests:
+  - name_template: "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:{{ .Tag }}"
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:{{ .Tag }}-arm64"
+
+  - name_template: "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:latest"
+    image_templates:
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:latest"
+      - "ghcr.io/{{ .RepoOwner }}/{{ .ProjectName }}:latest-arm64"
 
 changelog:
   sort: asc
@@ -46,8 +74,8 @@ changelog:
       - "^test:"
 
 release:
-  footer: >-
-
+  footer: |-
     ---
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+
