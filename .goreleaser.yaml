@@ -36,7 +36,9 @@ archives:
       - socks-server
 
 dockers:
-  - image_templates:
+  - ids:
+    - socks-server
+    image_templates:
       - "Pupumch/socks5:{{ .Tag }}-amd64"
     use: buildx
     build_flag_templates:
@@ -45,7 +47,9 @@ dockers:
     extra_files:
       - "{{ .ArtifactPath }}"
     goarch: amd64
-  - image_templates:
+  - ids:
+    - socks-server
+    image_templates:
       - "Pupumch/socks5:{{ .Tag }}-arm64"
     use: buildx
     build_flag_templates:

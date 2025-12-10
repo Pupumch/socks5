@@ -18,7 +18,7 @@ tasks:
         git push origin "v$NEW_TAG"
 
   release-artifacts:
-    desc: ""
+    desc: "Build artifacts and release them"
     cmds:
       - goreleaser release --clean
 
