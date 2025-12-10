@@ -35,6 +35,7 @@ archives:
     builds:
       - proxy
 
+dockers:
   - image_templates:
       - "Pupumch/socks5:{{ .Tag }}-amd64"
     use: buildx
