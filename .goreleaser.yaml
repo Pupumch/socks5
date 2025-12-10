@@ -35,6 +35,19 @@ archives:
     builds:
       - proxy
 
+dockers:
+  - id: socks-server-image
+    image_templates:
+      - "Pupumch/socks5:{{ .Tag }}"
+      - "Pupumch/socks5:latest"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64,linux/arm64"
+    goarch:
+      - amd64
+      - arm64
+
 changelog:
   sort: asc
   filters:
