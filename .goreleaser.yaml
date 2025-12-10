@@ -37,7 +37,7 @@ archives:
 
 dockers_v2:
   - images:
-      - "Pupumch/socks5"
+      - "ghcr.io/pupumch/socks5"
     tags:
       - "v{{ .Version }}"
       - "latest"
