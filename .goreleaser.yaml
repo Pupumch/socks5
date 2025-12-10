@@ -32,38 +32,15 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
-    builds:
+    ids:
       - socks-server
 
-dockers:
-  - ids:
-    - socks-server
-    image_templates:
-      - "Pupumch/socks5:{{ .Tag }}-amd64"
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-    extra_files:
-      - "{{ .ArtifactPath }}"
-    goarch: amd64
-  - ids:
-    - socks-server
-    image_templates:
-      - "Pupumch/socks5:{{ .Tag }}-arm64"
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-    extra_files:
-      - "{{ .ArtifactPath }}"
-    goarch: arm64
-
-docker_manifests:
-  - name_template: "Pupumch/socks5:{{ .Tag }}"
-    image_templates:
-      - "Pupumch/socks5:{{ .Tag }}-amd64"
-      - "Pupumch/socks5:{{ .Tag }}-arm64"
+dockers_v2:
+  - images:
+      - "Pupumch/socks5"
+    tags:
+      - "v{{ .Version }}"
+      - "latest"
 
 changelog:
   sort: asc
