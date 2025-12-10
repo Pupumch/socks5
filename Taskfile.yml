@@ -1,0 +1,60 @@
+version: "3"
+
+vars:
+  BINARY_NAME: "socks-server"
+  DOCKER_IMAGE: "Pupumch/socks5"
+
+tasks:
+
+  new-tag:
+    desc: "Generate a new semantic version tag and push it"
+    cmds:
+      - |
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+        echo "Last tag: $LAST_TAG"
+        NEW_TAG=$(semver -i patch "$LAST_TAG")
+        echo "New tag: $NEW_TAG"
+        git tag "v$NEW_TAG"
+        git push origin "v$NEW_TAG"
+
+  build-bins:
+    desc: "Build Go binaries for amd64 and arm64"
+    cmds:
+      - mkdir -p dist
+      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o dist/{{.BINARY_NAME}}_amd64 ./cmd/proxy
+      - GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o dist/{{.BINARY_NAME}}_arm64 ./cmd/proxy
+
+  build-docker:
+    desc: "Build multi-arch Docker image: task build-docker TAG=v0.x.x"
+    vars:
+      TAG: "{{.TAG}}"
+    cmds:
+      - '[ -n "{{.TAG}}" ] || (echo "Error: TAG= required"; exit 1)'
+      - docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          -t {{.DOCKER_IMAGE}}:{{.TAG}} \
+          -t {{.DOCKER_IMAGE}}:latest \
+          --push \
+          .
+
+  push-artifacts:
+    desc: "Create a GitHub release & upload binaries — requires GH CLI"
+    vars:
+      TAG: "{{.TAG}}"
+    cmds:
+      - '[ -n "{{.TAG}}" ] || (echo "Error: TAG= required"; exit 1)'
+      - gh release create {{.TAG}} \
+          dist/{{.BINARY_NAME}}_amd64 \
+          dist/{{.BINARY_NAME}}_arm64 \
+          --title "{{.TAG}}" \
+          --notes "Automated release for {{.TAG}}"
+
+  release:
+    desc: "Full release: tag → build binaries → build docker → upload"
+    cmds:
+      - task: new-tag
+      - 'NEW_TAG=$(semver $(git describe --tags --abbrev=0))'
+      - task: build-bins
+      - task: build-docker TAG=$NEW_TAG
+      - task: push-artifacts TAG=$NEW_TAG
+    silent: true
