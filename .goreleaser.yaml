@@ -41,7 +41,6 @@ dockers:
       - "Pupumch/socks5:{{ .Tag }}"
       - "Pupumch/socks5:latest"
     dockerfile: Dockerfile
-    context: .
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64,linux/arm64"
